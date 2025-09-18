@@ -1,0 +1,230 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: advanced-chat
+  name: Nokia 基地台故障排除問答平台
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/ollama:0.0.7@8fc496b3892344da47db6125c76fc0dbfd8020753f198032751d83f561d9443e
+kind: app
+version: 0.4.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: knowledge-retrieval
+      id: 1758094984572-source-1758094991998-target
+      source: '1758094984572'
+      sourceHandle: source
+      target: '1758094991998'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 1758094991998-source-17580950044120-target
+      source: '1758094991998'
+      sourceHandle: source
+      target: '17580950044120'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: 17580950044120-source-17580950044121-target
+      source: '17580950044120'
+      sourceHandle: source
+      target: '17580950044121'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 開始
+        type: start
+        variables: []
+      height: 54
+      id: '1758094984572'
+      position:
+        x: 80
+        y: 282
+      positionAbsolute:
+        x: 80
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        dataset_ids:
+        - GsXZZbFBnF7xosfcrvIy4Aa1ruuR71LZt146d3Ed64RvXpZuCZcKJEOV/RNxbXuU
+        desc: ''
+        multiple_retrieval_config:
+          reranking_enable: false
+          reranking_mode: reranking_model
+          reranking_model:
+            model: ''
+            provider: ''
+          top_k: 4
+        query_variable_selector:
+        - '1758094984572'
+        - sys.query
+        retrieval_mode: multiple
+        selected: false
+        title: 知識檢索
+        type: knowledge-retrieval
+      height: 92
+      id: '1758094991998'
+      position:
+        x: 380
+        y: 375
+      positionAbsolute:
+        x: 380
+        y: 375
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1758094991998'
+          - result
+        desc: ''
+        memory:
+          query_prompt_template: '{{#sys.query#}}
+
+
+            {{#sys.files#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: qwen2.5:7b
+          provider: langgenius/ollama/ollama
+        prompt_template:
+        - id: 1ea4a078-ce19-4953-87d8-daa6e5a05180
+          role: system
+          text: "你是一位資深 Nokia 基地台維運工程師，必須使用繁體中文回答。\n\n【回覆規則 — 嚴格依序判斷，符合其中一條就停止，不可同時套用多條】\n\
+            \n1. 打招呼：\n   - 僅當使用者輸入「完全等於」以下詞語之一時，才視為純打招呼：\n     [\"你好\", \"您好\", \"\
+            哈囉\", \"hi\", \"hello\", \"嗨\"]\n   - 此時只回覆一句：\n     「你好，很高興為你服務！您可以輸入\
+            \ Alarm Number、Fault ID，或描述相關告警/故障問題來查詢。」\n   - 若輸入同時包含打招呼 + 問題（例如：「你好，為什麼會出現\
+            \ Alarm xxx？」），則不要當打招呼，而是進入技術問題判斷。\n\n2. 技術問題（有知識庫命中時）：\n   - 當使用者的輸入與基地台告警或故障相關，且【知識庫檢索結果】中有資料，請僅依照檢索內容整理回答。\n\
+            \   - 回覆必須使用以下格式：\n     - 可能原因：xxxx\n     - 建議排除步驟：xxxx\n     - 參考來源：Nokia\
+            \ Knowledge Base（擷取重點片段）\n     - 注意事項：xxxx（若無可省略）\n\n3. 技術問題（知識庫沒有命中時）：\n\
+            \   - 如果使用者輸入看起來與基地台告警/故障相關，但【知識庫檢索結果】為空或不包含答案，\n     請明確說明：「未在知識庫找到相關資訊」，然後再根據你對問題的推理，提供可能的方向或提醒。\n\
+            \   - 回覆格式：\n     未在知識庫找到相關資訊。以下為可能的方向（僅供參考）：\n     - 可能原因：xxxx\n    \
+            \ - 建議排除步驟：xxxx\n\n4. 無關領域問題：\n   - 若使用者輸入與基地台告警/故障完全無關，請只回覆：「未找到相關資訊」。\n\
+            \n5. 嚴禁幻覺：\n   - 當提供「可能原因」與「建議排除步驟」時，如果並非來自知識庫，必須加上「僅供參考」的提醒。\n   - 不得假裝這些訊息來自知識庫。\n\
+            \   - 保持專業、簡潔，避免贅字。\n\n【使用者輸入】\n{{#sys.query#}}\n\n【知識庫檢索結果】（可能為 0~多則片段）\n\
+            {{#context#}}\n"
+        selected: false
+        title: LLM (1)
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 90
+      id: '17580950044120'
+      position:
+        x: 683.2530319738241
+        y: 419.3247044145742
+      positionAbsolute:
+        x: 683.2530319738241
+        y: 419.3247044145742
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#17580950044120.text#}}'
+        desc: ''
+        selected: false
+        title: 直接回覆 (1)
+        type: answer
+        variables: []
+      height: 105
+      id: '17580950044121'
+      position:
+        x: 966.3216106488894
+        y: 419.3247044145742
+      positionAbsolute:
+        x: 966.3216106488894
+        y: 419.3247044145742
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 138.79006446854126
+      y: 41.637414685076976
+      zoom: 0.6323589725661404
