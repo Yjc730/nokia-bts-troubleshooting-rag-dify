@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+
+  dify:
+    image: langgenius/dify:latest
+    depends_on:
+      - ollama
+    ports:
+      - "80:80"
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_HOST}:${OLLAMA_PORT}
+    restart: unless-stopped
+
+volumes:
+  ollama:
